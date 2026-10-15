@@ -1,4 +1,4 @@
-# Justakartik YouTube Discord Presence
+# YouTube Discord Presence
 
 Spotify-style Discord activity for **YouTube** and **YouTube Music**: title, channel/artist, real thumbnail/album art, and a progress bar — updated automatically, processed locally.
 
