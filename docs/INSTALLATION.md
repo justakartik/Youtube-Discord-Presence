@@ -1,35 +1,30 @@
 # Installation (Windows, Chrome/Edge)
 
-Prerequisite: Discord **desktop** app running (not the web client). Node.js is **not** needed for the packaged build.
+Prerequisite: Discord **desktop** app running (not the web client). Node.js is **not** needed.
 
-## 1. Create the Discord applications (once)
-1. Open https://discord.com/developers/applications → *New Application*.
-2. Name it **YouTube** (this name appears in "Watching YouTube"). Copy the *Application ID*.
-3. Repeat with the name **YouTube Music**.
-4. Optional: in *Rich Presence → Art Assets* upload an image with key `logo` (fallback when no artwork exists).
-5. In Discord: *User Settings → Activity Privacy* → enable "Share your detected activities".
+## Quick install (from GitHub Releases)
+1. Download from the [latest release](https://github.com/justakartik/Youtube-Discord-Presence/releases/latest):
+   - `JustakartikPresence.exe` — double-click it (or run `JustakartikPresence.exe --install`). It installs the companion for your user and registers it with Chrome/Edge. No admin rights. Windows SmartScreen may warn because the exe is unsigned: *More info → Run anyway*.
+   - `justakartik-presence-extension.zip` — unzip to a permanent folder, open `chrome://extensions`, enable *Developer mode* → *Load unpacked* → pick the folder. The extension ID is pinned and matches the companion.
+2. In Discord: *User Settings → Activity Privacy* → enable "Share your detected activities".
+3. Open YouTube / YouTube Music and play something.
 
-## 2. Load the extension
-1. Unzip `release/justakartik-presence-extension.zip` to a permanent folder (or use `apps/extension/dist`).
-2. `chrome://extensions` → enable *Developer mode* → *Load unpacked* → pick the folder.
-3. The extension ID is pinned by the manifest key and must equal `release/EXTENSION_ID.txt` (currently `fjlejmpbehpjmaihbpoilaefbnbfkdmc`).
-
-## 3. Install the companion
-```bash
-powershell -ExecutionPolicy Bypass -File release/companion/install.ps1 -YouTubeClientId <id> -MusicClientId <id>
+The release exe already contains the maintainer's Discord application IDs ("YouTube" and "YouTube Music"). Client IDs are public identifiers, not secrets. To use your own apps, create `%APPDATA%\Justakartik\Presence\config.json`:
+```json
+{ "clientIds": { "youtube": "<id>", "youtubeMusic": "<id>" } }
 ```
-This copies `jpresence-host.exe` to `%LOCALAPPDATA%\Justakartik\Presence`, writes the native host manifest (allowed only for the extension ID above), registers it under HKCU for Chrome, Edge and Chromium, and writes `%APPDATA%\Justakartik\Presence\config.json`. No admin rights needed. Reload the extension afterwards.
+Optional Discord art assets (per application, Rich Presence → Art Assets, from `discord-assets.zip`): `play`, `pause` (status badge) and `logo` (fallback image).
 
-The companion is launched and stopped by the browser automatically, so there is no startup entry.
-
-## 4. Use
-Open YouTube or YouTube Music and play something. The popup shows Companion and Discord status.
+No "start on boot" is needed: the browser launches the companion when you open it and stops it when you close it.
 
 ## Uninstall
 ```bash
-powershell -ExecutionPolicy Bypass -File release/companion/uninstall.ps1 -RemoveConfig
+JustakartikPresence.exe --uninstall --remove-config
 ```
 Then remove the extension in `chrome://extensions`.
 
+## Building from source
+See [DEVELOPMENT.md](DEVELOPMENT.md). `pnpm package` produces `release/` (the exe, extension zip, and the legacy `install.ps1`/`uninstall.ps1`).
+
 ## Chrome Web Store
-Upload the zip. The store assigns its own extension ID unless you upload with the same key; re-run `install.ps1 -ExtensionId <store id>` (or add the store origin to `allowed_origins`).
+The store assigns its own extension ID unless you upload with the same key; then run `JustakartikPresence.exe --install --extension-id <store id>`.

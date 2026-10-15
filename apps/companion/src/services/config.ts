@@ -17,10 +17,20 @@ export function parseConfig(raw: unknown): CompanionConfig {
   return { clientIds: { youtube: pick(ids.youtube), youtubeMusic: pick(ids.youtubeMusic) } };
 }
 
+/** Client IDs baked in at build time (public identifiers); config.json overrides them. */
+const BAKED = typeof __DEFAULT_IDS__ !== "undefined" ? __DEFAULT_IDS__ : {};
+
 export function loadConfig(file = configPath()): CompanionConfig {
+  let user: CompanionConfig = { clientIds: {} };
   try {
-    return parseConfig(JSON.parse(fs.readFileSync(file, "utf8")));
+    user = parseConfig(JSON.parse(fs.readFileSync(file, "utf8")));
   } catch {
-    return { clientIds: {} };
+    /* no config file: use baked defaults */
   }
+  return {
+    clientIds: {
+      youtube: user.clientIds.youtube ?? BAKED.youtube,
+      youtubeMusic: user.clientIds.youtubeMusic ?? BAKED.youtubeMusic,
+    },
+  };
 }
