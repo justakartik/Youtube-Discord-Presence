@@ -18,6 +18,13 @@ Statuses: Not started · In progress · Implemented · Tested · Blocked. "Teste
 | Docs | Implemented | docs/, README | — | — |
 | Dependency audit | Tested | — | `pnpm audit`: none known | — |
 
+## Open issue (as of 2026-10-15 night)
+Buttons ("Watch/Listen Along", "GitHub") and the play/pause badge do not show when presence comes from the browser, but DO work when the installed exe is driven directly (probe script sends a setActivity; Discord's reply accepted buttons, badge asset and proxied image).
+- Finding: Chrome-launched `jpresence-host.exe` processes never wrote `host.log` / `last-activity.json`, while direct and `cmd /c`-wrapped launches did. Presence text/progress still appears in Discord from the browser path, so it is unclear which process publishes it.
+- Suspects: (1) Chrome launches the host with a stripped environment; diagnostics now write next to the exe (`path.dirname(process.execPath)`), build installed, but still no log after 100 s with no reload of the extension; (2) the extension's background worker may be asleep and not relaunching the host; (3) an older activity may be lingering in Discord.
+- Next: reload extension + YouTube tab, play 15 s, read `%LOCALAPPDATA%\Justakartik\Presence\host.log` and `last-activity.json`; check the extension service-worker console for errors; confirm which process holds the Discord pipe.
+- Not yet in a GitHub release: the diagnostics build (release v0.1.0 contains the earlier exe).
+
 ## Blocked / needs the user
 - Create two Discord applications and supply client IDs.
 - Live verification in Chrome with Discord running.

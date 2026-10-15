@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { HOST_NAME } from "@jpresence/shared";
@@ -10,7 +11,7 @@ const KEYS = [
 ];
 
 export const installDir = (env = process.env) =>
-  path.join(env.LOCALAPPDATA ?? "", "Justakartik", "Presence");
+  path.join(env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local"), "Justakartik", "Presence");
 
 export function hostManifest(exePath: string, extensionId: string) {
   return {

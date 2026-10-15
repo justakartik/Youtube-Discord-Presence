@@ -1,8 +1,10 @@
+import fs from "node:fs";
+import path from "node:path";
 import { attachNative } from "./messaging/native";
 import { DiscordIpc } from "./discord/ipc";
 import { PresenceHost } from "./services/host";
 import { loadConfig } from "./services/config";
-import { install, uninstall } from "./install";
+import { install, installDir, uninstall } from "./install";
 
 const VERSION = "0.1.0";
 const EXT_ID = typeof __EXT_ID__ !== "undefined" ? __EXT_ID__ : "";
@@ -53,17 +55,51 @@ function runHost() {
   const send = attachNative(
     process.stdin,
     process.stdout,
-    (m) => host.handle(m),
-    () => {
+    (m) => {
+      dlog(`recv ${(m as { type?: string } | undefined)?.type ?? "invalid"}`);
+      host.handle(m);
+    },
+    (err) => {
+      dlog(`port closed${err ? `: ${err.message}` : ""}`);
       // Browser closed the port (or sent a bad frame): clear presence and exit.
       void host.shutdown().finally(() => process.exit(0));
     },
   );
 
+  // Local diagnostics only (message types and statuses, never titles); size-capped.
+  const logFile = path.join(path.dirname(process.execPath), "host.log");
+  try {
+    if (fs.existsSync(logFile) && fs.statSync(logFile).size > 100_000) fs.rmSync(logFile);
+  } catch {
+    /* ignore */
+  }
+  function dlog(line: string) {
+    try {
+      fs.appendFileSync(logFile, `${new Date().toISOString()} ${line}\n`);
+    } catch {
+      /* ignore */
+    }
+  }
+  dlog(`host started v${VERSION}`);
+
   host = new PresenceHost({
     config: loadConfig(),
     version: VERSION,
-    send,
+    send: (r) => {
+      dlog(`send ${r.type}${r.type === "status" ? ` discord=${r.discord}${r.error ? ` error=${r.error}` : ""}` : ""}`);
+      send(r);
+    },
+    onSent: (payload, response) => {
+      // Local-only diagnostics: overwritten on each update, never transmitted.
+      try {
+        fs.writeFileSync(
+          path.join(path.dirname(process.execPath), "last-activity.json"),
+          JSON.stringify({ at: new Date().toISOString(), sent: payload, discordReply: response }, null, 2),
+        );
+      } catch {
+        /* diagnostics must never break presence */
+      }
+    },
     createClient: (clientId) => new DiscordIpc({ clientId }),
   });
 

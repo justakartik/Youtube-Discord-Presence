@@ -12,6 +12,8 @@ export type HostOptions = {
   /** backoff in ms, indexed by attempt (last repeats) */
   backoff?: number[];
   now?: () => number;
+  /** Diagnostics hook: the exact payload sent and Discord's reply. */
+  onSent?: (payload: Record<string, unknown>, response: unknown) => void;
 };
 
 export const GITHUB_URL = "https://github.com/justakartik/Youtube-Discord-Presence";
@@ -137,7 +139,8 @@ export class PresenceHost {
     const key = JSON.stringify(payload);
     if (key === this.lastSent) return;
     try {
-      await this.client.setActivity(payload);
+      const response = await this.client.setActivity(payload);
+      this.o.onSent?.(payload, response);
       this.lastSent = key;
       this.lastUpdate = (this.o.now ?? Date.now)();
       this.lastError = undefined;

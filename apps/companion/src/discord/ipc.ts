@@ -55,7 +55,7 @@ export type DiscordActivity = Record<string, unknown>;
 
 export interface DiscordLike extends EventEmitter {
   connect(): Promise<void>;
-  setActivity(activity: DiscordActivity | null): Promise<void>;
+  setActivity(activity: DiscordActivity | null): Promise<unknown>;
   close(): void;
   readonly ready: boolean;
 }
@@ -71,7 +71,7 @@ export type IpcOptions = {
 export class DiscordIpc extends EventEmitter implements DiscordLike {
   private sock: net.Socket | null = null;
   private decoder = new FrameDecoder();
-  private pending = new Map<string, { resolve: () => void; reject: (e: Error) => void }>();
+  private pending = new Map<string, { resolve: (d?: unknown) => void; reject: (e: Error) => void }>();
   ready = false;
 
   constructor(private opts: IpcOptions) {
@@ -135,7 +135,7 @@ export class DiscordIpc extends EventEmitter implements DiscordLike {
               const p = this.pending.get(f.data.nonce)!;
               this.pending.delete(f.data.nonce);
               if (f.data.evt === "ERROR") p.reject(new Error(f.data.data?.message ?? "Discord error"));
-              else p.resolve();
+              else p.resolve(f.data?.data);
             }
           }
         }
@@ -151,7 +151,7 @@ export class DiscordIpc extends EventEmitter implements DiscordLike {
     });
   }
 
-  setActivity(activity: DiscordActivity | null): Promise<void> {
+  setActivity(activity: DiscordActivity | null): Promise<unknown> {
     if (!this.sock || !this.ready) return Promise.reject(new Error("Not connected to Discord"));
     const nonce = randomUUID();
     const sock = this.sock;
@@ -161,7 +161,7 @@ export class DiscordIpc extends EventEmitter implements DiscordLike {
         reject(new Error("Discord did not acknowledge activity"));
       }, 5000);
       this.pending.set(nonce, {
-        resolve: () => (clearTimeout(t), resolve()),
+        resolve: (d) => (clearTimeout(t), resolve(d)),
         reject: (e) => (clearTimeout(t), reject(e)),
       });
       sock.write(
