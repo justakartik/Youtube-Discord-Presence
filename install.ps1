@@ -1,0 +1,74 @@
+<#
+  Justakartik YouTube Discord Presence - one-line installer (Windows, per-user, no admin).
+
+    irm https://raw.githubusercontent.com/justakartik/Youtube-Discord-Presence/main/install.ps1 | iex
+
+  Downloads the latest GitHub release, verifies SHA-256, installs the companion (Discord application IDs are
+  built in) and unpacks the browser extension. Re-run it any time to update.
+#>
+param(
+  [string]$Version = "latest",
+  [string]$Repo = "justakartik/Youtube-Discord-Presence"
+)
+$ErrorActionPreference = "Stop"
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$ProgressPreference = "SilentlyContinue"   # much faster Invoke-WebRequest on Windows PowerShell 5.1
+
+function Step($m) { Write-Host "==> $m" -ForegroundColor Cyan }
+
+Step "Finding release ($Version)"
+$api = if ($Version -eq "latest") { "https://api.github.com/repos/$Repo/releases/latest" } else { "https://api.github.com/repos/$Repo/releases/tags/$Version" }
+$rel = Invoke-RestMethod -Uri $api -Headers @{ "User-Agent" = "justakartik-presence-installer" }
+function Asset($name) {
+  $a = $rel.assets | Where-Object { $_.name -eq $name } | Select-Object -First 1
+  if (-not $a) { throw "Release $($rel.tag_name) has no asset named '$name'." }
+  return $a.browser_download_url
+}
+
+$tmp = Join-Path $env:TEMP ("jpresence-" + [Guid]::NewGuid().ToString("N"))
+New-Item -ItemType Directory -Force $tmp | Out-Null
+try {
+  $files = @("JustakartikPresence.exe", "justakartik-presence-extension.zip", "SHA256SUMS.txt")
+  foreach ($f in $files) {
+    Step "Downloading $f"
+    Invoke-WebRequest -Uri (Asset $f) -OutFile (Join-Path $tmp $f) -UseBasicParsing
+  }
+
+  Step "Verifying checksums"
+  $sums = @{}
+  Get-Content (Join-Path $tmp "SHA256SUMS.txt") | ForEach-Object {
+    if ($_ -match '^([0-9a-fA-F]{64})\s+\*?(.+)$') { $sums[$Matches[2].Trim()] = $Matches[1].ToLower() }
+  }
+  foreach ($f in $files | Where-Object { $_ -ne "SHA256SUMS.txt" }) {
+    $actual = (Get-FileHash (Join-Path $tmp $f) -Algorithm SHA256).Hash.ToLower()
+    if (-not $sums.ContainsKey($f) -or $sums[$f] -ne $actual) { throw "Checksum mismatch for $f. Aborting; nothing was installed." }
+  }
+
+  Step "Installing companion"
+  Get-Process jpresence-host -ErrorAction SilentlyContinue | Stop-Process -Force
+  Start-Sleep -Milliseconds 800
+  # Piping the output keeps the exe from waiting for a key press.
+  & (Join-Path $tmp "JustakartikPresence.exe") --install | Out-Host
+  if ($LASTEXITCODE -ne 0 -and $null -ne $LASTEXITCODE) { throw "Companion install failed (exit code $LASTEXITCODE)." }
+
+  Step "Unpacking extension"
+  $extDir = Join-Path $env:LOCALAPPDATA "Justakartik\Presence\extension"
+  if (Test-Path $extDir) { Get-ChildItem $extDir -Force | Remove-Item -Recurse -Force }
+  New-Item -ItemType Directory -Force $extDir | Out-Null
+  Expand-Archive -Path (Join-Path $tmp "justakartik-presence-extension.zip") -DestinationPath $extDir -Force
+  if (-not (Test-Path (Join-Path $extDir "manifest.json"))) { throw "Extension unpack failed (manifest.json missing)." }
+}
+finally {
+  Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+try { Set-Clipboard -Value $extDir } catch { }
+Write-Host ""
+Write-Host "Companion installed ($($rel.tag_name))." -ForegroundColor Green
+Write-Host "Last step (Chrome does not allow scripts to add extensions):" -ForegroundColor Yellow
+Write-Host "  1. Open chrome://extensions and turn on 'Developer mode'"
+Write-Host "  2. Click 'Load unpacked' and choose:  $extDir   (path copied to your clipboard)"
+Write-Host "  3. Discord: User Settings -> Activity Privacy -> 'Share your detected activities'"
+Write-Host "Updating later? Just run this installer again, then click reload on the extension."
+try { Start-Process "chrome.exe" "chrome://extensions" } catch { try { Start-Process "msedge.exe" "edge://extensions" } catch { } }
+try { Start-Process explorer.exe $extDir } catch { }

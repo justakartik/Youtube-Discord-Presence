@@ -8,7 +8,20 @@ YouTube / YouTube Music tab ──► Chrome extension (MV3) ──native messag
 
 Why a companion? Discord only accepts Rich Presence over a *local* named pipe; a browser extension cannot open one, and Discord OAuth2 does not allow changing presence of a user account. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-## Download & setup (Windows, Chrome or Edge)
+## One-line install (Windows, Chrome or Edge)
+Open **Windows PowerShell** and run:
+```powershell
+irm https://raw.githubusercontent.com/justakartik/Youtube-Discord-Presence/main/install.ps1 | iex
+```
+It downloads the latest release, verifies its SHA-256 checksums, installs the companion (the Discord application IDs are built in), unpacks the extension to `%LOCALAPPDATA%\Justakartik\Presence\extension` and opens `chrome://extensions`. Chrome doesn't let scripts add extensions, so the last step is yours: turn on *Developer mode*, click *Load unpacked*, and choose that folder (the path is copied to your clipboard). Run the same command again to update, then click reload on the extension.
+
+Remove everything with:
+```powershell
+irm https://raw.githubusercontent.com/justakartik/Youtube-Discord-Presence/main/uninstall.ps1 | iex
+```
+Prefer to read a script before running it? Open [install.ps1](install.ps1) first; it is short.
+
+## Manual download & setup (Windows, Chrome or Edge)
 1. Open the [latest release](https://github.com/justakartik/Youtube-Discord-Presence/releases/latest) and download:
    - `JustakartikPresence.exe`
    - `justakartik-presence-extension.zip`

@@ -2,7 +2,7 @@
 
 1. Bump `version` in `apps/extension/package.json` and `apps/companion/src/index.ts` (`VERSION`).
 2. `pnpm install && pnpm typecheck && pnpm lint && pnpm test`.
-3. `pnpm package` → `release/`:
+3. `pnpm package`, then `node scripts/make-release-assets.mjs` → `release/github/` (attach all four files, including `SHA256SUMS.txt`, which `install.ps1` verifies):
    - `justakartik-presence-extension.zip` (Chrome Web Store upload; remove `key` from the manifest only if the store rejects it)
    - `companion/jpresence-host.exe`, `install.ps1`, `uninstall.ps1`
    - `EXTENSION_ID.txt`
