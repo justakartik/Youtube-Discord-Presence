@@ -4,7 +4,7 @@ import { attachNative } from "./messaging/native";
 import { DiscordIpc } from "./discord/ipc";
 import { PresenceHost } from "./services/host";
 import { loadConfig } from "./services/config";
-import { install, installDir, uninstall } from "./install";
+import { install, uninstall } from "./install";
 
 const VERSION = "0.1.0";
 const EXT_ID = typeof __EXT_ID__ !== "undefined" ? __EXT_ID__ : "";
