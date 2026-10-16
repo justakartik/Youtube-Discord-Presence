@@ -18,7 +18,7 @@ function arg(name: string): string | undefined {
 
 function pause() {
   // Double-clicked from Explorer: keep the console open so the user can read the result.
-  if (process.stdin.isTTY) {
+  if (process.stdin.isTTY && process.stdout.isTTY) {
     log("\nPress any key to close...");
     process.stdin.setRawMode?.(true);
     process.stdin.resume();
@@ -26,7 +26,24 @@ function pause() {
   }
 }
 
-if (args.includes("--version")) {
+// Chrome/Edge always pass the calling extension's origin as the first argument.
+const launchedByBrowser = args.some((a) => a.startsWith("chrome-extension://"));
+
+try {
+  // Startup trace (no personal data): helps diagnose how the browser launched us.
+  const startupLog = path.join(path.dirname(process.execPath), "startup.log");
+  if (fs.existsSync(startupLog) && fs.statSync(startupLog).size > 50_000) fs.rmSync(startupLog);
+  fs.appendFileSync(
+    startupLog,
+    `${new Date().toISOString()} start argv=${JSON.stringify(args)} browser=${launchedByBrowser} tty=${Boolean(process.stdin.isTTY)}\n`,
+  );
+} catch {
+  /* ignore */
+}
+
+if (launchedByBrowser) {
+  runHost();
+} else if (args.includes("--version")) {
   log(VERSION);
   process.exit(0);
 } else if (args.includes("--uninstall")) {
@@ -46,7 +63,7 @@ if (args.includes("--version")) {
   }
   pause();
 } else {
-  runHost();
+  runHost(); // piped stdin without an origin argument (tests, manual use)
 }
 
 function runHost() {

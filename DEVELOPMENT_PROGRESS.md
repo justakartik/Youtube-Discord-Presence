@@ -18,7 +18,11 @@ Statuses: Not started · In progress · Implemented · Tested · Blocked. "Teste
 | Docs | Implemented | docs/, README | — | — |
 | Dependency audit | Tested | — | `pnpm audit`: none known | — |
 
-## Open issue (as of 2026-10-15 night)
+## Resolved (2026-10-16): buttons/badge missing from the browser path
+Root cause: environment, not code. Shell commands run from the Claude desktop app are in an MSIX package whose writes to `%LOCALAPPDATA%`/`%APPDATA%` are redirected to a private copy. Chrome reads the real folders, so it kept launching the old exe that was installed manually the day before; every "reinstall" from the agent session only changed the private copy. Fix: installed the new exe into the real folder via a one-off Windows scheduled task (processes started by Task Scheduler are not redirected). After that the Chrome-launched host sent buttons + badge and Discord accepted both (see `last-activity.json`). Also fixed: installer no longer waits for a key press when stdout is not a console; startup trace is size-capped; Chrome launches are detected by the `chrome-extension://` argument instead of `isTTY`.
+Lesson recorded in docs/DEVELOPMENT.md.
+
+## Previous open issue (kept for history, as of 2026-10-15 night)
 Buttons ("Watch/Listen Along", "GitHub") and the play/pause badge do not show when presence comes from the browser, but DO work when the installed exe is driven directly (probe script sends a setActivity; Discord's reply accepted buttons, badge asset and proxied image).
 - Finding: Chrome-launched `jpresence-host.exe` processes never wrote `host.log` / `last-activity.json`, while direct and `cmd /c`-wrapped launches did. Presence text/progress still appears in Discord from the browser path, so it is unclear which process publishes it.
 - Suspects: (1) Chrome launches the host with a stripped environment; diagnostics now write next to the exe (`path.dirname(process.execPath)`), build installed, but still no log after 100 s with no reload of the extension; (2) the extension's background worker may be asleep and not relaunching the host; (3) an older activity may be lingering in Discord.

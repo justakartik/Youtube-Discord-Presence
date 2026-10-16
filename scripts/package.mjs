@@ -12,7 +12,8 @@ run("node", ["scripts/gen-assets.mjs"]);
 run("pnpm", ["build"]);
 
 const rel = path.join(root, "release");
-fs.rmSync(rel, { recursive: true, force: true });
+fs.mkdirSync(rel, { recursive: true });
+for (const f of fs.readdirSync(rel)) { try { fs.rmSync(path.join(rel, f), { recursive: true, force: true }); } catch { /* locked by Explorer: overwritten below */ } }
 fs.mkdirSync(path.join(rel, "companion"), { recursive: true });
 
 // extension zip (bsdtar ships with Windows 10+)
