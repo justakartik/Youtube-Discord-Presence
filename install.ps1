@@ -45,11 +45,20 @@ try {
   }
 
   Step "Installing companion"
-  Get-Process jpresence-host -ErrorAction SilentlyContinue | Stop-Process -Force
-  Start-Sleep -Milliseconds 800
-  # Piping the output keeps the exe from waiting for a key press.
-  & (Join-Path $tmp "JustakartikPresence.exe") --install | Out-Host
-  if ($LASTEXITCODE -ne 0 -and $null -ne $LASTEXITCODE) { throw "Companion install failed (exit code $LASTEXITCODE)." }
+  $installed = Join-Path $env:LOCALAPPDATA "Justakartik\Presence\jpresence-host.exe"
+  $want = $sums["JustakartikPresence.exe"]
+  $ok = $false
+  # The browser relaunches the companion as soon as it is stopped, which can lock the file mid-copy,
+  # so retry until the installed exe really matches the verified download.
+  for ($i = 1; $i -le 20 -and -not $ok; $i++) {
+    Get-Process jpresence-host -ErrorAction SilentlyContinue | Stop-Process -Force
+    Start-Sleep -Milliseconds 400
+    # Piping the output keeps the exe from waiting for a key press.
+    & (Join-Path $tmp "JustakartikPresence.exe") --install | Out-Null
+    if (Test-Path $installed) { $ok = ((Get-FileHash $installed -Algorithm SHA256).Hash.ToLower() -eq $want) }
+  }
+  if (-not $ok) { throw "Could not replace the running companion. Close Chrome/Edge and run the installer again." }
+  Write-Host "    companion installed and verified"
 
   Step "Unpacking extension"
   $extDir = Join-Path $env:LOCALAPPDATA "Justakartik\Presence\extension"
