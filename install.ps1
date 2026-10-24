@@ -25,13 +25,27 @@ function Asset($name) {
   return $a.browser_download_url
 }
 
+# A stalled transfer must not hang forever: each attempt gets a deadline, then it is retried.
+function Get-Download($url, $dest) {
+  for ($try = 1; $try -le 3; $try++) {
+    $job = Start-Job -ScriptBlock { param($u, $o) $ProgressPreference = "SilentlyContinue"; Invoke-WebRequest -Uri $u -OutFile $o -UseBasicParsing } -ArgumentList $url, $dest
+    $done = Wait-Job $job -Timeout 300
+    $ok = $done -and $job.State -eq "Completed"
+    Stop-Job $job -ErrorAction SilentlyContinue; Remove-Job $job -Force -ErrorAction SilentlyContinue
+    if ($ok -and (Test-Path $dest)) { return }
+    Remove-Item $dest -Force -ErrorAction SilentlyContinue
+    Write-Host "    download attempt $try failed or timed out; retrying..." -ForegroundColor Yellow
+  }
+  throw "Could not download $url. Check your connection and run the installer again."
+}
+
 $tmp = Join-Path $env:TEMP ("jpresence-" + [Guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Force $tmp | Out-Null
 try {
   $files = @("JustakartikPresence.exe", "justakartik-presence-extension.zip", "SHA256SUMS.txt")
   foreach ($f in $files) {
     Step "Downloading $f"
-    Invoke-WebRequest -Uri (Asset $f) -OutFile (Join-Path $tmp $f) -UseBasicParsing
+    Get-Download (Asset $f) (Join-Path $tmp $f)
   }
 
   Step "Verifying checksums"
