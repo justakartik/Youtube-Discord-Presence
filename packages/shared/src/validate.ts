@@ -24,6 +24,7 @@ export function safeImageUrl(u: unknown): string | undefined {
   try {
     const url = new URL(u);
     if (url.protocol !== "https:") return undefined;
+    if (url.hostname === "www.google.com" && url.pathname === "/s2/favicons") return url.toString(); // site icons
     return ALLOWED_IMAGE_HOSTS.some((r) => r.test(url.hostname)) ? url.toString() : undefined;
   } catch {
     return undefined;
@@ -53,7 +54,12 @@ export function normalizeMedia(raw: unknown, now = Date.now()): MediaState | nul
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
   const source = r.source as Source;
-  if (source !== "youtube" && source !== "youtube-music") return null;
+  if (source !== "youtube" && source !== "youtube-music" && source !== "web") return null;
+  const isWeb = source === "web";
+  const siteId = isWeb && typeof r.siteId === "string" && /^[a-z0-9-]{1,32}$/.test(r.siteId) ? r.siteId : undefined;
+  const siteName = isWeb ? clean(r.siteName, 40) : undefined;
+  if (isWeb && (!siteId || !siteName)) return null;
+  const activityType = isWeb && (r.activityType === 0 || r.activityType === 2 || r.activityType === 3) ? r.activityType : undefined;
   const title = clean(r.title, 128);
   if (!title) return null;
   const playbackState = STATES.includes(r.playbackState as PlaybackState)
@@ -69,9 +75,13 @@ export function normalizeMedia(raw: unknown, now = Date.now()): MediaState | nul
   return {
     source,
     title,
-    creator: clean(r.creator, 128),
-    album: clean(r.album, 128),
-    mediaUrl: safePageUrl(r.mediaUrl),
+    creator: isWeb ? undefined : clean(r.creator, 128),
+    album: isWeb ? undefined : clean(r.album, 128),
+    siteId,
+    siteName,
+    activityType,
+    // Web activity never carries a page URL.
+    mediaUrl: isWeb ? undefined : safePageUrl(r.mediaUrl),
     artworkUrl: safeImageUrl(r.artworkUrl),
     durationMs,
     positionMs,
@@ -95,8 +105,8 @@ export function validateHostRequest(raw: unknown): HostRequest | null {
     case "setActivity": {
       const a = r.activity;
       if (!a || typeof a !== "object") return null;
-      if (a.source !== "youtube" && a.source !== "youtube-music") return null;
-      if (a.type !== 2 && a.type !== 3) return null;
+      if (a.source !== "youtube" && a.source !== "youtube-music" && a.source !== "web") return null;
+      if (a.type !== 0 && a.type !== 2 && a.type !== 3) return null;
       const details = clean(a.details, 128);
       if (!details) return null;
       const startMs = epoch(a.startMs);
@@ -107,6 +117,8 @@ export function validateHostRequest(raw: unknown): HostRequest | null {
         activity: {
           source: a.source,
           type: a.type,
+          name: clean(a.name, 48),
+          noBadge: a.noBadge === true,
           details,
           state: clean(a.state, 128),
           largeImage: safeImageUrl(a.largeImage),

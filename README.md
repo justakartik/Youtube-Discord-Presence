@@ -49,6 +49,17 @@ pnpm package                    # builds and assembles release/
 ```
 Details: [docs/INSTALLATION.md](docs/INSTALLATION.md) and [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
+## Other websites (Instagram, WhatsApp Web, Facebook, ...)
+Besides YouTube and YouTube Music the extension can show a **fixed, private label** for other sites, for example *Playing WhatsApp · Chatting*, *Watching Instagram · Watching Reels*, *Playing X · Scrolling the timeline*.
+
+- **Opt-in per site.** Open the extension settings -> *Other websites* and enable a site (or *Enable all* popular sites). Chrome shows its own permission prompt for each; nothing runs on a site you did not allow. Reload open tabs of that site once afterwards.
+- **Private by design.** Only the site and the first part of the address are used to pick a label. Contact names, messages, usernames, page titles, links and search terms are never read, stored or sent. Websites never get "Listen/Watch Along" buttons because no link is shared.
+- **Only while you are there.** Shown while the tab is in front and you are active; cleared when the tab is hidden or after 2 minutes without input.
+- **All other websites** (off by default) shows *Browsing the web* plus the domain only. Banks, email, health, government, login pages, IP addresses and intranet hosts are never shared.
+- YouTube / YouTube Music playback takes priority over plain browsing; paused media gives way to the page you are actively using.
+
+Built-in sites: Instagram, Facebook, Messenger, WhatsApp Web, Telegram Web, Snapchat Web, Discord (web), X/Twitter, Reddit, TikTok, Twitch, Netflix, Prime Video, JioHotstar, Disney+, Spotify Web, GitHub, Stack Overflow, ChatGPT, Claude, LinkedIn, Pinterest, Wikipedia. Labels are defined in [packages/shared/src/sites.ts](packages/shared/src/sites.ts); adding a site is one entry there.
+
 ## Commands
 | | |
 |---|---|

@@ -26,3 +26,6 @@ YouTube: `https://i.ytimg.com/vi/<id>/hqdefault.jpg` (the real thumbnail for the
 
 ## Multi-tab selection
 playing > buffering > paused; then preferred site; then most recently started playing; then most recent update; then lowest tab id. Tabs silent for 45 s are dropped.
+
+## Websites (v0.2)
+`WebProvider` (extension/src/providers/web.ts) runs in a dynamically registered content script (`webcontent.js`, see background/webScripts.ts) on sites the user granted. It maps the URL to a `MediaState` with `source: "web"`, a fixed label as `title`, `siteName`, an activity type and the site favicon. `buildActivity` turns that into an activity whose Discord `name` is the site (Discord honours an activity-level `name`, verified against the live client), with an elapsed timer, no badge, no buttons, no URL. The companion reuses the YouTube Discord application (or `clientIds.web` if set), so switching between YouTube and a site needs no reconnect.

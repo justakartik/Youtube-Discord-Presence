@@ -33,7 +33,9 @@ export class MediaMonitor {
     for (const e of EVENTS) doc.addEventListener(e, this.schedule, true);
     doc.addEventListener("yt-navigate-finish", this.schedule, true);
     doc.addEventListener("yt-page-data-updated", this.schedule, true);
+    doc.addEventListener("visibilitychange", this.schedule);
     doc.defaultView?.addEventListener("popstate", this.schedule);
+    doc.defaultView?.addEventListener("focus", this.schedule);
     this.mo = new MutationObserver(this.schedule);
     const target = doc.querySelector("title") ?? doc.head;
     if (target) this.mo.observe(target, { childList: true, subtree: true, characterData: true });
@@ -47,7 +49,9 @@ export class MediaMonitor {
     for (const e of EVENTS) doc.removeEventListener(e, this.schedule, true);
     doc.removeEventListener("yt-navigate-finish", this.schedule, true);
     doc.removeEventListener("yt-page-data-updated", this.schedule, true);
+    doc.removeEventListener("visibilitychange", this.schedule);
     doc.defaultView?.removeEventListener("popstate", this.schedule);
+    doc.defaultView?.removeEventListener("focus", this.schedule);
     this.mo?.disconnect();
     if (this.poll) clearInterval(this.poll);
     if (this.last) this.d.emit(null);

@@ -2,7 +2,7 @@ import type { ActivityPayload, HostResponse } from "@jpresence/shared";
 import { validateHostRequest } from "@jpresence/shared";
 import type { DiscordLike } from "../discord/ipc";
 
-export type CompanionConfig = { clientIds: { youtube?: string; youtubeMusic?: string } };
+export type CompanionConfig = { clientIds: { youtube?: string; youtubeMusic?: string; web?: string } };
 
 export type HostOptions = {
   config: CompanionConfig;
@@ -24,6 +24,7 @@ export function toDiscordActivity(a: ActivityPayload): Record<string, unknown> {
     details: a.details,
     status_display_type: 2,
   };
+  if (a.name) act.name = a.name; // honoured by Discord: lets one app show "WhatsApp", "Instagram", ...
   if (a.state) act.state = a.state;
   if (a.startMs !== undefined) {
     act.timestamps = { start: a.startMs, ...(a.endMs !== undefined ? { end: a.endMs } : {}) };
@@ -33,8 +34,9 @@ export function toDiscordActivity(a: ActivityPayload): Record<string, unknown> {
   act.assets = {
     large_image: a.largeImage ?? "logo",
     ...(a.largeText ? { large_text: a.largeText } : {}),
-    small_image: a.paused ? "pause" : "play",
-    small_text: a.paused ? "Paused" : "Playing",
+    ...(a.noBadge
+      ? {}
+      : { small_image: a.paused ? "pause" : "play", small_text: a.paused ? "Paused" : "Playing" }),
   };
   if (a.url) {
     act.details_url = a.url;
@@ -63,6 +65,9 @@ export class PresenceHost {
 
   private clientIdFor(source: string): string | undefined {
     const c = this.o.config.clientIds;
+    // Websites reuse the YouTube application by default (the activity name is overridden per site),
+    // so switching between YouTube and a website needs no reconnect.
+    if (source === "web") return c.web ?? c.youtube ?? c.youtubeMusic;
     return (source === "youtube-music" ? c.youtubeMusic : c.youtube) ?? c.youtube ?? c.youtubeMusic;
   }
 

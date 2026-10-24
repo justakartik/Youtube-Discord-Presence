@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Music2, Play, Settings as Cog, Tv } from "lucide-react";
+import { Globe, Music2, Play, Settings as Cog, Tv } from "lucide-react";
 import { StatusDot, Toggle } from "../components/ui";
 import { useSettings } from "../services/useSettings";
 import type { PopupState } from "../services/messages";
@@ -61,8 +61,9 @@ export function Popup() {
             )}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1 text-xs text-muted">
-                {m.source === "youtube" ? <Tv size={12} /> : <Music2 size={12} />}
-                {m.source === "youtube" ? "YouTube" : "YouTube Music"} · {m.playbackState}
+                {m.source === "youtube" ? <Tv size={12} /> : m.source === "web" ? <Globe size={12} /> : <Music2 size={12} />}
+                {m.source === "youtube" ? "YouTube" : m.source === "web" ? (m.siteName ?? "Website") : "YouTube Music"} ·{" "}
+                {m.source === "web" ? "shared as a fixed label" : m.playbackState}
               </div>
               <div className="truncate text-sm font-medium" title={m.title}>{m.title}</div>
               <div className="truncate text-xs text-muted">{m.creator ?? ""}</div>

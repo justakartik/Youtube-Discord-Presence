@@ -1,5 +1,5 @@
 import type { ActivityPayload, MediaState, Settings } from "./types";
-import { sourceSettings } from "./select";
+import { mediaEnabled, sourceSettings } from "./select";
 import { youtubeThumbnail, youtubeVideoId } from "./artwork";
 
 /** Build the Discord activity for the chosen media, or null if presence should be cleared. */
@@ -8,6 +8,7 @@ export function buildActivity(
   settings: Settings,
   now = Date.now(),
 ): ActivityPayload | null {
+  if (m.source === "web") return buildWebActivity(m, settings, now);
   const s = sourceSettings(settings, m);
   if (!settings.enabled || !s.enabled) return null;
   if (m.playbackState === "stopped" || m.playbackState === "ended") return null;
@@ -46,6 +47,24 @@ export function buildActivity(
   return a;
 }
 
+/** Privacy-safe activity for a website: fixed label, site name, favicon, optional elapsed timer. No URL, no title. */
+function buildWebActivity(m: MediaState, settings: Settings, now: number): ActivityPayload | null {
+  if (!mediaEnabled(settings, m) || m.playbackState !== "playing" || !m.siteName) return null;
+  const a: ActivityPayload = {
+    source: "web",
+    type: m.activityType ?? 0,
+    name: m.siteName,
+    noBadge: true,
+    details: m.title,
+    largeImage: settings.web.showIcon ? m.artworkUrl : undefined,
+    largeText: m.siteName,
+  };
+  if (settings.web.showElapsed && m.positionMs !== undefined) {
+    a.startMs = now - (m.positionMs + Math.max(0, now - m.updatedAt));
+  }
+  return a;
+}
+
 /** Key used to suppress duplicate updates; timestamps are bucketed to tolerate jitter. */
 export function activityKey(a: ActivityPayload | null, toleranceMs = 3000): string {
   if (!a) return "none";
@@ -53,6 +72,7 @@ export function activityKey(a: ActivityPayload | null, toleranceMs = 3000): stri
   return JSON.stringify([
     a.source,
     a.type,
+    a.name,
     a.details,
     a.state,
     a.largeImage,

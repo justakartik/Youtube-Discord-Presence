@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Activity, Lock, Music2, Palette, SlidersHorizontal, Tv } from "lucide-react";
 import { DEFAULT_SETTINGS, type Settings, type SourceSettings } from "@jpresence/shared";
 import { Section, Select, StatusDot, Toggle } from "../components/ui";
+import { WebSection } from "./WebSection";
 import { useSettings } from "../services/useSettings";
 import type { PopupState } from "../services/messages";
 
@@ -67,6 +68,8 @@ export function Options() {
         nouns={{ title: "video title", creator: "channel", art: "thumbnail" }} />
       <SourceSection title="YouTube Music" icon={<Music2 size={14} />} s={settings.youtubeMusic} onChange={patch("youtubeMusic")}
         nouns={{ title: "song title", creator: "artist", art: "album artwork" }} />
+
+      <WebSection settings={settings} update={update} />
 
       <Section title="Appearance" icon={<Palette size={14} />}>
         <Select label="Theme" value={settings.theme} options={[{ value: "dark", label: "Dark" }, { value: "light", label: "Light" }]}

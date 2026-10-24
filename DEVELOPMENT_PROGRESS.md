@@ -18,6 +18,9 @@ Statuses: Not started · In progress · Implemented · Tested · Blocked. "Teste
 | Docs | Implemented | docs/, README | — | — |
 | Dependency audit | Tested | — | `pnpm audit`: none known | — |
 
+## v0.2.0 - website presence (2026-10-24)
+Status: Implemented; logic Tested (89 automated tests: classification/privacy, blocklist, settings, selection, activity mapping, WebProvider in jsdom, script registration, sender checks). **Not verified live** in Chrome: the optional-permission prompt, dynamic content-script registration and real Instagram/WhatsApp pages. The Discord `name` override was verified against the live Discord client with a probe.
+
 ## Resolved (2026-10-16): buttons/badge missing from the browser path
 Root cause: environment, not code. Shell commands run from the Claude desktop app are in an MSIX package whose writes to `%LOCALAPPDATA%`/`%APPDATA%` are redirected to a private copy. Chrome reads the real folders, so it kept launching the old exe that was installed manually the day before; every "reinstall" from the agent session only changed the private copy. Fix: installed the new exe into the real folder via a one-off Windows scheduled task (processes started by Task Scheduler are not redirected). After that the Chrome-launched host sent buttons + badge and Discord accepted both (see `last-activity.json`). Also fixed: installer no longer waits for a key press when stdout is not a console; startup trace is size-capped; Chrome launches are detected by the `chrome-extension://` argument instead of `isTTY`.
 Lesson recorded in docs/DEVELOPMENT.md.

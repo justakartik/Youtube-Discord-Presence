@@ -2,8 +2,10 @@ import { HOST_NAME, normalizeMedia } from "@jpresence/shared";
 import { PresenceManager } from "./presence";
 import { loadSettings, onSettingsChanged } from "../services/settingsStore";
 import {
-  isFromContentScript, isFromExtensionPage, parseContentMessage, parseUiMessage, type PopupState,
+  isFromContentScript, isFromExtensionPage, parseContentMessage, parseUiMessage, senderMatchesSource,
+  type PopupState,
 } from "../services/messages";
+import { syncWebScripts } from "./webScripts";
 
 const version = chrome.runtime.getManifest().version;
 let manager: PresenceManager | null = null;
@@ -58,7 +60,8 @@ chrome.runtime.onMessage.addListener((raw, sender, sendResponse) => {
       if (content.type === "media-stop") m.remove(tabId);
       else {
         const media = normalizeMedia(content.media);
-        if (media) m.update(tabId, media); else m.remove(tabId);
+        if (media && senderMatchesSource(sender.url, media.source)) m.update(tabId, media);
+        else m.remove(tabId);
       }
       return sendResponse({ ok: true });
     }
@@ -80,6 +83,12 @@ chrome.runtime.onMessage.addListener((raw, sender, sendResponse) => {
   })();
   return true; // async response
 });
+
+// Site access is granted per site by the user; keep the dynamic content script in step with it.
+chrome.permissions.onAdded.addListener(() => void syncWebScripts());
+chrome.permissions.onRemoved.addListener(() => void syncWebScripts());
+chrome.runtime.onInstalled.addListener(() => void syncWebScripts());
+chrome.runtime.onStartup.addListener(() => void syncWebScripts());
 
 chrome.tabs.onRemoved.addListener((tabId) => { void init().then((m) => m.remove(tabId)); });
 chrome.runtime.onStartup.addListener(() => { void init(); });

@@ -128,7 +128,9 @@ describe("sender validation", () => {
   const ID = "abc";
   it("content script messages", () => {
     expect(isFromContentScript({ id: ID, tab: { id: 1 }, url: "https://www.youtube.com/watch?v=x" }, ID)).toBe(true);
-    expect(isFromContentScript({ id: ID, tab: { id: 1 }, url: "https://evil.com/" }, ID)).toBe(false);
+    // Any https page may host a (user-granted) web content script; the *source* check is senderMatchesSource.
+    expect(isFromContentScript({ id: ID, tab: { id: 1 }, url: "https://evil.com/" }, ID)).toBe(true);
+    expect(isFromContentScript({ id: ID, tab: { id: 1 }, url: "http://evil.com/" }, ID)).toBe(false);
     expect(isFromContentScript({ id: "other", tab: { id: 1 }, url: "https://www.youtube.com/" }, ID)).toBe(false);
     expect(isFromContentScript({ id: ID, url: "https://www.youtube.com/" }, ID)).toBe(false);
   });

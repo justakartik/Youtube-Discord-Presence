@@ -31,6 +31,7 @@ await build({
 for (const [name, entry, format] of [
   ["background", "src/background/index.ts", "es"],
   ["content", "src/content/index.ts", "iife"],
+  ["webcontent", "src/content/web.ts", "iife"], // registered dynamically for sites the user grants access to
 ]) {
   await build({
     ...common,
@@ -46,7 +47,7 @@ const manifest = {
   manifest_version: 3,
   name: "Justakartik YouTube Discord Presence",
   short_name: "Justakartik Presence",
-  description: "Show what you watch on YouTube and listen to on YouTube Music as your Discord activity.",
+  description: "Show what you watch on YouTube and listen to on YouTube Music, and privacy-safe activity on other sites, as your Discord status.",
   version: pkg.version,
   key,
   minimum_chrome_version: "120",
@@ -61,7 +62,9 @@ const manifest = {
       run_at: "document_idle",
     },
   ],
-  permissions: ["storage", "nativeMessaging"],
+  permissions: ["storage", "nativeMessaging", "scripting"],
+  // Websites other than YouTube are opt-in: Chrome asks the user per site (see the settings page).
+  optional_host_permissions: ["https://*/*"],
   host_permissions: ["https://www.youtube.com/*", "https://music.youtube.com/*", "https://m.youtube.com/*"],
   content_security_policy: { extension_pages: "script-src 'self'; object-src 'self'" },
 };
@@ -72,6 +75,7 @@ const refs = [
   manifest.background.service_worker, manifest.options_page, manifest.action.default_popup,
   ...Object.values(manifest.icons), ...manifest.content_scripts.flatMap((c) => c.js),
 ];
+refs.push("webcontent.js"); // injected via chrome.scripting, not referenced in the manifest
 const missing = refs.filter((r) => !fs.existsSync(path.join(out, r)));
 if (missing.length) throw new Error("Manifest references missing files: " + missing.join(", "));
 console.log("extension built ->", out);

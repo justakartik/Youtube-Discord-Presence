@@ -40,11 +40,23 @@ export function isYouTubeUrl(u: string | undefined): boolean {
   }
 }
 
+/** A message from one of this extension's content scripts, in a tab, on an https page. */
 export function isFromContentScript(
   sender: { id?: string; tab?: { id?: number }; url?: string },
   extId: string,
 ): boolean {
-  return sender.id === extId && typeof sender.tab?.id === "number" && isYouTubeUrl(sender.url);
+  if (sender.id !== extId || typeof sender.tab?.id !== "number" || !sender.url) return false;
+  try {
+    return new URL(sender.url).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+/** YouTube sources may only come from YouTube pages; web activity only from non-YouTube pages. */
+export function senderMatchesSource(senderUrl: string | undefined, source: string): boolean {
+  const yt = isYouTubeUrl(senderUrl);
+  return source === "web" ? !yt && typeof senderUrl === "string" : yt;
 }
 
 export function isFromExtensionPage(sender: { id?: string; tab?: unknown; url?: string }, extId: string, base: string): boolean {
