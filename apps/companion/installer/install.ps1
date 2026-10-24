@@ -1,5 +1,5 @@
 <#
- Justakartik YouTube Discord Presence - companion installer (per-user, no admin needed).
+ Justakartik Browser Presence - companion installer (per-user, no admin needed).
  Usage: powershell -ExecutionPolicy Bypass -File install.ps1 [-YouTubeClientId <id>] [-MusicClientId <id>] [-ExtensionId <id>]
 #>
 param(
@@ -21,7 +21,7 @@ Copy-Item $exeSrc (Join-Path $dir "jpresence-host.exe") -Force
 $manifestPath = Join-Path $dir "$HostName.json"
 $manifest = [ordered]@{
   name = $HostName
-  description = "Justakartik YouTube Discord Presence companion"
+  description = "Justakartik Browser Presence companion"
   path = (Join-Path $dir "jpresence-host.exe")
   type = "stdio"
   allowed_origins = @("chrome-extension://$ExtensionId/")

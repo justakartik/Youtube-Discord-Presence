@@ -51,7 +51,7 @@ export function Options() {
       <header className="mb-2 flex items-center gap-3">
         <img src="icons/icon-48.png" alt="" className="h-10 w-10 rounded-xl" />
         <div>
-          <h1 className="text-xl font-semibold">Justakartik YouTube Discord Presence</h1>
+          <h1 className="text-xl font-semibold">Justakartik Browser Presence</h1>
           <p className="text-sm text-muted">Settings are saved automatically.</p>
         </div>
       </header>

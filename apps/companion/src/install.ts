@@ -16,7 +16,7 @@ export const installDir = (env = process.env) =>
 export function hostManifest(exePath: string, extensionId: string) {
   return {
     name: HOST_NAME,
-    description: "Justakartik YouTube Discord Presence companion",
+    description: "Justakartik Browser Presence companion",
     path: exePath,
     type: "stdio",
     allowed_origins: [`chrome-extension://${extensionId}/`],
@@ -67,5 +67,5 @@ export function uninstall(log: (s: string) => void, removeConfig = false): void 
   if (removeConfig) {
     fs.rmSync(path.join(process.env.APPDATA ?? "", "Justakartik", "Presence"), { recursive: true, force: true });
   }
-  log("Justakartik YouTube Discord Presence companion removed.");
+  log("Justakartik Browser Presence companion removed.");
 }

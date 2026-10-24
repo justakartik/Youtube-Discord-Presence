@@ -1,6 +1,8 @@
-# YouTube Discord Presence
+# Justakartik Browser Presence
 
-Spotify-style Discord activity for **YouTube** and **YouTube Music**: title, channel/artist, real thumbnail/album art, and a progress bar — updated automatically, processed locally.
+Spotify-style Discord activity for **YouTube**, **YouTube Music**, streaming sites (Netflix, Prime Video, ...) and, privately, the rest of your browsing (WhatsApp, Instagram, ...): title, channel/artist, real thumbnail/album art and a progress bar, updated automatically and processed locally.
+
+Made by **Justakartik**.
 
 ```
 YouTube / YouTube Music tab ──► Chrome extension (MV3) ──native messaging──► companion (jpresence-host.exe) ──local IPC──► Discord desktop

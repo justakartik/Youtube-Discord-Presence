@@ -1,5 +1,5 @@
 <#
-  Removes the Justakartik YouTube Discord Presence companion, its native-host registration and the unpacked extension.
+  Removes the Justakartik Browser Presence companion, its native-host registration and the unpacked extension.
 
     irm https://raw.githubusercontent.com/justakartik/Youtube-Discord-Presence/main/uninstall.ps1 | iex
 
@@ -14,4 +14,4 @@ foreach ($root in @("HKCU:\Software\Google\Chrome\NativeMessagingHosts", "HKCU:\
 }
 Remove-Item -Path (Join-Path $env:LOCALAPPDATA "Justakartik\Presence") -Recurse -Force
 Remove-Item -Path (Join-Path $env:APPDATA "Justakartik\Presence") -Recurse -Force
-Write-Host "Justakartik YouTube Discord Presence removed. Now remove the extension in chrome://extensions." -ForegroundColor Green
+Write-Host "Justakartik Browser Presence removed. Now remove the extension in chrome://extensions." -ForegroundColor Green

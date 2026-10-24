@@ -7,4 +7,4 @@ foreach ($root in @("HKCU:\Software\Google\Chrome\NativeMessagingHosts", "HKCU:\
 }
 Remove-Item -Path (Join-Path $env:LOCALAPPDATA "Justakartik\Presence") -Recurse -Force
 if ($RemoveConfig) { Remove-Item -Path (Join-Path $env:APPDATA "Justakartik\Presence") -Recurse -Force }
-Write-Host "Justakartik YouTube Discord Presence companion removed."
+Write-Host "Justakartik Browser Presence companion removed."

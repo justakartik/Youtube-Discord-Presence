@@ -1,5 +1,5 @@
 <#
-  Justakartik YouTube Discord Presence - one-line installer (Windows, per-user, no admin).
+  Justakartik Browser Presence - one-line installer (Windows, per-user, no admin).
 
     irm https://raw.githubusercontent.com/justakartik/Youtube-Discord-Presence/main/install.ps1 | iex
 

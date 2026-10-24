@@ -6,7 +6,7 @@ import { PresenceHost } from "./services/host";
 import { loadConfig } from "./services/config";
 import { install, uninstall } from "./install";
 
-const VERSION = "0.2.0";
+const VERSION = "0.3.0";
 const EXT_ID = typeof __EXT_ID__ !== "undefined" ? __EXT_ID__ : "";
 const args = process.argv.slice(2);
 const log = (s: string) => process.stdout.write(`${s}\n`);

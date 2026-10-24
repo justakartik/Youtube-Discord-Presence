@@ -45,7 +45,8 @@ for (const [name, entry, format] of [
 
 const manifest = {
   manifest_version: 3,
-  name: "Justakartik YouTube Discord Presence",
+  name: "Justakartik Browser Presence",
+  author: "Justakartik",
   short_name: "Justakartik Presence",
   description: "Show what you watch on YouTube and listen to on YouTube Music, and privacy-safe activity on other sites, as your Discord status.",
   version: pkg.version,

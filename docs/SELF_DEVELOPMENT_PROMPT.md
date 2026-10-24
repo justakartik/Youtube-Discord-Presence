@@ -1,4 +1,4 @@
-# Self-Development Prompt — Justakartik YouTube Discord Presence
+# Self-Development Prompt — Justakartik Browser Presence
 
 ## 1. Product goal
 Show what the user watches on YouTube or listens to on YouTube Music as a Discord activity (Watching / Listening, with title, creator, artwork, progress bar), automatically, locally, privately.

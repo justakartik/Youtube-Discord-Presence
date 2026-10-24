@@ -21,7 +21,7 @@ describe.skipIf(!fs.existsSync(exe))("packaged companion exe (real native-messag
     child.stdin.end();
     const code = await Promise.race([exited, new Promise<string>((r) => setTimeout(() => r("timeout"), 5000))]);
     if (code === "timeout") child.kill();
-    expect(got.find((m) => m.type === "hello")).toMatchObject({ v: 1, companionVersion: "0.2.0" });
+    expect(got.find((m) => m.type === "hello")).toMatchObject({ v: 1, companionVersion: "0.3.0" });
     expect(got.some((m) => m.type === "pong")).toBe(true);
     expect(got.some((m) => m.type === "status" && /invalid/i.test(m.error ?? ""))).toBe(true);
     expect(code).toBe(0);
