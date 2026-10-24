@@ -80,6 +80,7 @@ export function normalizeMedia(raw: unknown, now = Date.now()): MediaState | nul
     siteId,
     siteName,
     activityType,
+    watching: isWeb && r.watching === true ? true : undefined,
     // Web activity never carries a page URL.
     mediaUrl: isWeb ? undefined : safePageUrl(r.mediaUrl),
     artworkUrl: safeImageUrl(r.artworkUrl),

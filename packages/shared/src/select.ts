@@ -24,7 +24,7 @@ export function mediaEnabled(s: Settings, m: MediaState): boolean {
 
 /** Media that is really playing beats plain browsing, which beats paused media. */
 const rank = (m: MediaState) => {
-  if (m.source === "web") return m.playbackState === "playing" ? 2.5 : 0;
+  if (m.source === "web") return m.playbackState === "playing" ? 2.5 : m.watching && m.playbackState === "paused" ? 1 : 0;
   return m.playbackState === "playing"
     ? 3
     : m.playbackState === "buffering"

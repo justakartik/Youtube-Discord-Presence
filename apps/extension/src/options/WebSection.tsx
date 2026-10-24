@@ -89,8 +89,9 @@ export function WebSection({ settings, update }: Props) {
   return (
     <Section title="Other websites" icon={<Globe size={14} />}>
       <p className="py-2 text-xs text-muted">
-        Shows a fixed, private label such as “Chatting” on WhatsApp or “Watching Reels” on Instagram. It never reads or
-        sends contact names, messages, page titles, usernames or links, and only runs on sites you allow. Your browser
+        Shows a fixed, private label such as “Chatting” on WhatsApp or “Watching Reels” on Instagram. Chat and social
+        sites never share contact names, messages, page titles, usernames or links. Streaming sites can also show the
+        title and progress of what you watch (switch below). It only runs on sites you allow. Your browser
         asks for permission per site.
       </p>
       <Toggle
@@ -103,6 +104,17 @@ export function WebSection({ settings, update }: Props) {
         label="Show elapsed time"
         checked={settings.web.showElapsed}
         onChange={(v) => update((s) => ({ ...s, web: { ...s.web, showElapsed: v } }))}
+      />
+      <Toggle
+        label="Show what I'm watching on streaming sites"
+        hint="Netflix, Prime Video, JioHotstar, Disney+ and similar: the movie/episode title. Off shows just “Watching Netflix”."
+        checked={settings.web.showTitles}
+        onChange={(v) => update((s) => ({ ...s, web: { ...s.web, showTitles: v } }))}
+      />
+      <Toggle
+        label="Show progress bar on streaming sites"
+        checked={settings.web.showProgress}
+        onChange={(v) => update((s) => ({ ...s, web: { ...s.web, showProgress: v } }))}
       />
       <Toggle
         label="Show site icon"

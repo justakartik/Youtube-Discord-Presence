@@ -49,18 +49,32 @@ export function buildActivity(
 
 /** Privacy-safe activity for a website: fixed label, site name, favicon, optional elapsed timer. No URL, no title. */
 function buildWebActivity(m: MediaState, settings: Settings, now: number): ActivityPayload | null {
-  if (!mediaEnabled(settings, m) || m.playbackState !== "playing" || !m.siteName) return null;
+  if (!mediaEnabled(settings, m) || !m.siteName) return null;
+  const watching = m.watching === true;
+  const paused = watching && m.playbackState === "paused";
+  if (m.playbackState !== "playing" && !paused) return null;
   const a: ActivityPayload = {
     source: "web",
     type: m.activityType ?? 0,
     name: m.siteName,
-    noBadge: true,
+    // Streaming players get the same play/pause badge as YouTube; plain browsing has none.
+    noBadge: !watching,
+    paused: paused || undefined,
     details: m.title,
+    state: paused ? "Paused" : undefined,
     largeImage: settings.web.showIcon ? m.artworkUrl : undefined,
     largeText: m.siteName,
   };
-  if (settings.web.showElapsed && m.positionMs !== undefined) {
-    a.startMs = now - (m.positionMs + Math.max(0, now - m.updatedAt));
+  if (paused || m.positionMs === undefined) return a;
+  const pos = m.positionMs + Math.max(0, now - m.updatedAt);
+  if (watching) {
+    // Progress bar like YouTube (needs a known duration).
+    if (settings.web.showProgress) {
+      a.startMs = now - pos;
+      if (m.durationMs !== undefined) a.endMs = a.startMs + m.durationMs;
+    }
+  } else if (settings.web.showElapsed) {
+    a.startMs = now - pos;
   }
   return a;
 }

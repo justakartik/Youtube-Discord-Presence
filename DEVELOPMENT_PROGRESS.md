@@ -18,6 +18,9 @@ Statuses: Not started · In progress · Implemented · Tested · Blocked. "Teste
 | Docs | Implemented | docs/, README | — | — |
 | Dependency audit | Tested | — | `pnpm audit`: none known | — |
 
+## Streaming sites: title + progress (2026-10-24)
+Status: Implemented; logic Tested with simulated players (20 tests in tests/ott.test.ts: title selectors, Media Session and tab-title fallbacks, trailer/ad filtering, paused/hidden/idle rules, title/progress switches, activity + Discord mapping). **Not verified on the real sites** (no accounts/DRM access here): the Netflix/Prime title selectors are best-effort and may need adjusting; other sites rely on Media Session / tab title. Next: check each site on a real machine and adjust `player` hints in packages/shared/src/sites.ts.
+
 ## Memory / performance audit (2026-10-24)
 - Measured (Windows, Node 24 single-executable companion): idle 37.8 MB working set / 20.9 MB private / 13 threads per companion process. Almost all of that is the Node runtime itself; V8 flags only shave ~2 MB (now applied: `--max-old-space-size=24 --max-semi-space-size=1` -> 34.5 MB / 18.9 MB).
 - Biggest practical win: the extension now closes the native connection 60 s after there is nothing to show, so the companion process exits (0 MB when idle) and Chrome's background worker can sleep. It reconnects on demand.

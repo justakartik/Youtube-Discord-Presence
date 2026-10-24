@@ -20,7 +20,7 @@ export const DEFAULT_SETTINGS: Settings = {
   youtube: src(),
   youtubeMusic: src(),
   // On by default, but nothing happens until the user grants the browser permission for a site.
-  web: { enabled: true, allSites: false, showElapsed: true, showIcon: true, sites: {} },
+  web: { enabled: true, allSites: false, showElapsed: true, showIcon: true, showTitles: true, showProgress: true, sites: {} },
 };
 
 const bool = (v: unknown, d: boolean) => (typeof v === "boolean" ? v : d);
@@ -49,6 +49,8 @@ function mergeWeb(raw: unknown, d: WebSettings): WebSettings {
     allSites: bool(r.allSites, d.allSites),
     showElapsed: bool(r.showElapsed, d.showElapsed),
     showIcon: bool(r.showIcon, d.showIcon),
+    showTitles: bool(r.showTitles, d.showTitles),
+    showProgress: bool(r.showProgress, d.showProgress),
     sites,
   };
 }

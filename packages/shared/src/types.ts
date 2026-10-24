@@ -14,6 +14,8 @@ export type MediaState = {
   siteId?: string;
   siteName?: string;
   activityType?: 0 | 2 | 3;
+  /** "web" only: a streaming-site player is playing/paused (title + progress), as opposed to plain browsing. */
+  watching?: boolean;
   mediaUrl?: string;
   artworkUrl?: string;
   durationMs?: number;
@@ -41,6 +43,10 @@ export type WebSettings = {
   allSites: boolean;
   showElapsed: boolean;
   showIcon: boolean;
+  /** Streaming sites (Netflix, Prime Video, ...): show the title being watched. Off = "Watching Netflix". */
+  showTitles: boolean;
+  /** Streaming sites: show the progress bar. */
+  showProgress: boolean;
   /** Per curated site overrides (default: on). Access is still granted per site by the browser. */
   sites: Record<string, boolean>;
 };

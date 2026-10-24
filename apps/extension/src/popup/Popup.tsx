@@ -63,7 +63,7 @@ export function Popup() {
               <div className="flex items-center gap-1 text-xs text-muted">
                 {m.source === "youtube" ? <Tv size={12} /> : m.source === "web" ? <Globe size={12} /> : <Music2 size={12} />}
                 {m.source === "youtube" ? "YouTube" : m.source === "web" ? (m.siteName ?? "Website") : "YouTube Music"} ·{" "}
-                {m.source === "web" ? "shared as a fixed label" : m.playbackState}
+                {m.source === "web" && !m.watching ? "shared as a fixed label" : m.playbackState}
               </div>
               <div className="truncate text-sm font-medium" title={m.title}>{m.title}</div>
               <div className="truncate text-xs text-muted">{m.creator ?? ""}</div>

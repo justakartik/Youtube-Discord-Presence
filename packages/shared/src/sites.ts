@@ -10,9 +10,20 @@ export type ActivityType = 0 | 2 | 3; // Playing | Listening | Watching
 
 export type SiteRule = { prefix: string; label: string; type?: ActivityType };
 
+/** Streaming sites: how to find the title of what is playing. Best-effort; every step has a fallback. */
+export type PlayerHints = {
+  /** Only treat the page as a player when the path starts with one of these (default: any path). */
+  paths?: string[];
+  /** Elements that hold the current title, tried in order. */
+  titleSelectors?: string[];
+  /** Patterns removed from document.title to leave just the title. */
+  strip?: RegExp[];
+};
+
 export type SiteProfile = {
   id: string;
   name: string;
+  player?: PlayerHints;
   /** Registrable hosts; subdomains match too. */
   hosts: string[];
   type: ActivityType;
@@ -65,10 +76,30 @@ export const SITES: SiteProfile[] = [
   {
     id: "netflix", name: "Netflix", hosts: ["netflix.com"], type: 3, defaultLabel: "Watching Netflix",
     rules: [{ prefix: "/browse", label: "Choosing something to watch", type: 0 }],
+    player: {
+      paths: ["/watch/"],
+      titleSelectors: ['[data-uia="video-title"] h4', '[data-uia="video-title"]', ".video-title h4", ".video-title"],
+      strip: [/\s*[-|]\s*Netflix$/i, /^Netflix\s*[-|:]\s*/i],
+    },
   },
-  { id: "primevideo", name: "Prime Video", hosts: ["primevideo.com"], type: 3, defaultLabel: "Watching Prime Video", rules: [] },
-  { id: "hotstar", name: "JioHotstar", hosts: ["hotstar.com", "jiohotstar.com"], type: 3, defaultLabel: "Watching JioHotstar", rules: [] },
-  { id: "disneyplus", name: "Disney+", hosts: ["disneyplus.com"], type: 3, defaultLabel: "Watching Disney+", rules: [] },
+  { id: "primevideo", name: "Prime Video", hosts: ["primevideo.com"], type: 3, defaultLabel: "Watching Prime Video", rules: [],
+    player: {
+      titleSelectors: [".atvwebplayersdk-title-text", 'h1[data-automation-id="title"]'],
+      strip: [/^Prime Video:\s*/i, /\s*[-|]\s*Prime Video$/i, /^Watch\s+/i],
+    },
+  },
+  { id: "hotstar", name: "JioHotstar", hosts: ["hotstar.com", "jiohotstar.com"], type: 3, defaultLabel: "Watching JioHotstar", rules: [],
+    player: { strip: [/\s*[-|]\s*(Jio)?Hotstar.*$/i, /^Watch\s+/i, /\s+Online( Free)?$/i] },
+  },
+  { id: "disneyplus", name: "Disney+", hosts: ["disneyplus.com"], type: 3, defaultLabel: "Watching Disney+", rules: [],
+    player: { strip: [/^Watch\s+/i, /^Play\s+/i, /\s*[-|]\s*Disney\+.*$/i, /^Disney\+\s*[-|:]\s*/i] },
+  },
+  { id: "hulu", name: "Hulu", hosts: ["hulu.com"], type: 3, defaultLabel: "Watching Hulu", rules: [], player: { strip: [/\s*[-|]\s*Hulu$/i, /^Watch\s+/i] } },
+  { id: "max", name: "Max", hosts: ["max.com", "hbomax.com"], type: 3, defaultLabel: "Watching Max", rules: [], player: { strip: [/\s*[-|]\s*Max$/i, /^Watch\s+/i] } },
+  { id: "crunchyroll", name: "Crunchyroll", hosts: ["crunchyroll.com"], type: 3, defaultLabel: "Watching Crunchyroll", rules: [], player: { strip: [/\s*[-|]\s*Crunchyroll$/i, /^Watch\s+/i] } },
+  { id: "sonyliv", name: "SonyLIV", hosts: ["sonyliv.com"], type: 3, defaultLabel: "Watching SonyLIV", rules: [], player: { strip: [/\s*[-|]\s*SonyLIV.*$/i, /^Watch\s+/i] } },
+  { id: "zee5", name: "ZEE5", hosts: ["zee5.com"], type: 3, defaultLabel: "Watching ZEE5", rules: [], player: { strip: [/\s*[-|]\s*ZEE5.*$/i, /^Watch\s+/i, /\s+Online( Free)?$/i] } },
+  { id: "appletv", name: "Apple TV", hosts: ["tv.apple.com"], type: 3, defaultLabel: "Watching Apple TV", rules: [], player: { strip: [/\s*[-\u2013|]\s*Apple\s*TV.*$/i, /^Watch\s+/i] } },
   { id: "spotify", name: "Spotify", hosts: ["open.spotify.com"], type: 2, defaultLabel: "Listening to music", rules: [] },
   { id: "github", name: "GitHub", hosts: ["github.com"], type: 0, defaultLabel: "Browsing code", rules: [] },
   { id: "stackoverflow", name: "Stack Overflow", hosts: ["stackoverflow.com"], type: 0, defaultLabel: "Looking for answers", rules: [] },
