@@ -22,7 +22,7 @@ run(process.platform === "win32" ? "C:/Windows/System32/tar.exe" : "tar", ["-a",
 // companion single executable (Node SEA)
 const comp = path.join(root, "apps/companion");
 const blob = path.join(comp, "dist/sea.blob");
-fs.writeFileSync(path.join(comp, "dist/sea-config.json"), JSON.stringify({ main: "dist/host.cjs", output: "dist/sea.blob", disableExperimentalSEAWarning: true }));
+fs.writeFileSync(path.join(comp, "dist/sea-config.json"), JSON.stringify({ main: "dist/host.cjs", output: "dist/sea.blob", disableExperimentalSEAWarning: true, execArgv: ["--max-old-space-size=24", "--max-semi-space-size=1"] }));
 run(process.execPath, ["--experimental-sea-config", "dist/sea-config.json"], comp);
 const exe = path.join(rel, "companion/jpresence-host.exe");
 fs.copyFileSync(process.execPath, exe);

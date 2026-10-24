@@ -33,6 +33,9 @@ export class PresenceManager {
   private settings: Settings;
   status: CompanionStatus = { connected: false, hostMissing: false, discord: "disconnected" };
   static STALE_MS = 45_000;
+  /** With nothing to show, close the native port so the companion exits (frees ~20 MB) and the worker can sleep. */
+  static IDLE_DISCONNECT_MS = 60_000;
+  private idleTimer: unknown = null;
 
   constructor(private d: PresenceDeps, settings: Settings) {
     this.settings = settings;
@@ -90,12 +93,34 @@ export class PresenceManager {
     const chosen = this.pick();
     const activity = chosen ? buildActivity(chosen.media, this.settings, this.d.now()) : null;
     const key = activityKey(activity);
+    if (activity) this.cancelIdle();
+    else this.armIdle();
     if (key !== this.lastKey) {
       this.lastKey = key;
       if (activity) this.send({ v: 1, type: "setActivity", activity });
       else if (this.port) this.send({ v: 1, type: "clearActivity" });
     }
     this.d.onChange?.();
+  }
+
+  private armIdle() {
+    if (this.idleTimer || !this.port) return;
+    this.idleTimer = this.d.setTimer(() => {
+      this.idleTimer = null;
+      if (this.lastKey !== "none" || !this.port) return; // something is being shown again
+      const port = this.port;
+      this.port = null;
+      this.lastKey = "none";
+      this.status = { ...this.status, connected: false, discord: "disconnected" };
+      try { port.disconnect(); } catch { /* already closed */ }
+      this.d.onChange?.();
+    }, PresenceManager.IDLE_DISCONNECT_MS);
+  }
+
+  private cancelIdle() {
+    if (!this.idleTimer) return;
+    this.d.clearTimer(this.idleTimer);
+    this.idleTimer = null;
   }
 
   private ensurePort(): NativePortLike | null {

@@ -18,6 +18,13 @@ Statuses: Not started · In progress · Implemented · Tested · Blocked. "Teste
 | Docs | Implemented | docs/, README | — | — |
 | Dependency audit | Tested | — | `pnpm audit`: none known | — |
 
+## Memory / performance audit (2026-10-24)
+- Measured (Windows, Node 24 single-executable companion): idle 37.8 MB working set / 20.9 MB private / 13 threads per companion process. Almost all of that is the Node runtime itself; V8 flags only shave ~2 MB (now applied: `--max-old-space-size=24 --max-semi-space-size=1` -> 34.5 MB / 18.9 MB).
+- Biggest practical win: the extension now closes the native connection 60 s after there is nothing to show, so the companion process exits (0 MB when idle) and Chrome's background worker can sleep. It reconnects on demand.
+- Leak hunt (`node scripts/stress.mjs`): 300k state updates across 50 tabs -> +0.05 MB heap, tab map bounded; companion host + Discord pipe with thousands of updates and hundreds of Discord restarts -> heap plateaus (~+0.8 MB one-time warm-up, same at 1x and 5x load), sockets/handles return to baseline after shutdown; content-script monitor start/stop x2000 -> zero leaked listeners. No leaks found.
+- Fixes: in-session log rotation (size was only checked at startup), web pages poll every 5 s and not at all while the tab is hidden.
+- A native rewrite (Go/Rust, ~2-5 MB) would be the only way to go much lower; no toolchain is installed here, so not done.
+
 ## v0.2.0 - website presence (2026-10-24)
 Status: Implemented; logic Tested (89 automated tests: classification/privacy, blocklist, settings, selection, activity mapping, WebProvider in jsdom, script registration, sender checks). **Not verified live** in Chrome: the optional-permission prompt, dynamic content-script registration and real Instagram/WhatsApp pages. The Discord `name` override was verified against the live Discord client with a probe.
 

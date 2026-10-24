@@ -18,6 +18,8 @@ const monitor: MediaMonitor = new MediaMonitor({
   doc: document,
   getUrl: () => new URL(location.href),
   provider,
+  pollMs: 5000,
+  skipWhenHidden: true,
   emit: (media) => {
     if (dead) return;
     try {

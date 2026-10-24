@@ -15,24 +15,34 @@ async function hasAccess(origins: string[]): Promise<boolean> {
   }
 }
 
+export type AccessResult = { ok: boolean; error?: string };
+
 /** Must be called from a click handler (browser requirement). Shows Chrome's own permission prompt. */
-async function requestAccess(origins: string[]): Promise<boolean> {
+async function requestAccess(origins: string[]): Promise<AccessResult> {
   try {
-    return await chrome.permissions.request({ origins });
-  } catch {
-    return false;
+    const ok = await chrome.permissions.request({ origins });
+    return ok ? { ok } : { ok, error: chrome.runtime.lastError?.message ?? "Chrome reported the request was declined or dismissed." };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
   }
 }
+
+const why = (r: AccessResult) => `Access was not granted. ${r.error ?? ""}`.trim();
 
 export function WebSection({ settings, update }: Props) {
   const [access, setAccess] = useState<Record<string, boolean>>({});
   const [notice, setNotice] = useState("");
+  const [granted, setGranted] = useState<string[]>([]);
 
   const refresh = useCallback(async () => {
     const next: Record<string, boolean> = {};
     for (const s of SITES) next[s.id] = await hasAccess(originPatterns(s));
     next.other = await hasAccess([ALL_SITES_PATTERN]);
     setAccess(next);
+    try {
+      const all = await chrome.permissions.getAll();
+      setGranted((all.origins ?? []).filter((o) => !/youtube.com/.test(o)));
+    } catch { /* ignore */ }
   }, []);
   useEffect(() => { void refresh(); }, [refresh]);
 
@@ -41,9 +51,9 @@ export function WebSection({ settings, update }: Props) {
 
   async function toggleSite(site: SiteProfile, on: boolean) {
     if (on) {
-      const ok = await requestAccess(originPatterns(site));
-      setSite(site.id, ok);
-      setNotice(ok ? `${site.name} enabled. Reload open ${site.name} tabs once.` : "Access was not granted.");
+      const r = await requestAccess(originPatterns(site));
+      setSite(site.id, r.ok);
+      setNotice(r.ok ? `${site.name} enabled. Reload open ${site.name} tabs once.` : why(r));
     } else {
       setSite(site.id, false);
       try { await chrome.permissions.remove({ origins: originPatterns(site) }); } catch { /* ignore */ }
@@ -53,22 +63,22 @@ export function WebSection({ settings, update }: Props) {
 
   async function enableAllPopular() {
     const origins = SITES.flatMap(originPatterns);
-    const ok = await requestAccess(origins);
-    if (ok) {
+    const r = await requestAccess(origins);
+    if (r.ok) {
       update((s) => ({
         ...s,
         web: { ...s.web, enabled: true, sites: Object.fromEntries(SITES.map((x) => [x.id, true])) },
       }));
       setNotice("Popular sites enabled. Reload open tabs once.");
-    } else setNotice("Access was not granted.");
+    } else setNotice(why(r));
     await refresh();
   }
 
   async function toggleOthers(on: boolean) {
     if (on) {
-      const ok = await requestAccess([ALL_SITES_PATTERN]);
-      update((s) => ({ ...s, web: { ...s.web, allSites: ok } }));
-      setNotice(ok ? "All other sites enabled (domain only). Reload open tabs once." : "Access was not granted.");
+      const r = await requestAccess([ALL_SITES_PATTERN]);
+      update((s) => ({ ...s, web: { ...s.web, allSites: r.ok } }));
+      setNotice(r.ok ? "All other sites enabled (domain only). Reload open tabs once." : why(r));
     } else {
       update((s) => ({ ...s, web: { ...s.web, allSites: false } }));
       try { await chrome.permissions.remove({ origins: [ALL_SITES_PATTERN] }); } catch { /* ignore */ }
@@ -124,6 +134,9 @@ export function WebSection({ settings, update }: Props) {
         onChange={(v) => void toggleOthers(v)}
       />
       {notice && <p role="status" className="py-2 text-xs text-accent">{notice}</p>}
+      <p className="py-2 text-[11px] text-muted">
+        Granted sites: {granted.length ? granted.join("  ") : "none yet"}
+      </p>
     </Section>
   );
 }

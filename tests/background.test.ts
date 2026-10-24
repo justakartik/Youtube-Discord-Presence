@@ -145,3 +145,34 @@ describe("sender validation", () => {
     expect(parseUiMessage({ type: "media" })).toBeNull();
   });
 });
+
+describe("idle disconnect (frees the companion process and lets the worker sleep)", () => {
+  it("closes the native port after 60 s with nothing to show, and reconnects on demand", () => {
+    const m = mk();
+    m.update(1, media());
+    expect(ports.length).toBe(1);
+    let disconnected = 0;
+    ports[0]!.disconnect = () => { disconnected++; };
+    m.remove(1); // nothing left -> clearActivity + idle timer armed
+    expect(ports[0]!.sent.at(-1).type).toBe("clearActivity");
+    expect(timers.length).toBe(1);
+    expect(disconnected).toBe(0);
+    timers.shift()!(); // 60 s later
+    expect(disconnected).toBe(1);
+    expect(m.status.connected).toBe(false);
+    m.update(2, media({ title: "Next" })); // new activity opens a fresh connection
+    expect(ports.length).toBe(2);
+    expect(ports[1]!.sent.at(-1).type).toBe("setActivity");
+  });
+  it("does not disconnect if something starts playing again before the timer fires", () => {
+    const m = mk();
+    m.update(1, media());
+    let disconnected = 0;
+    ports[0]!.disconnect = () => { disconnected++; };
+    m.remove(1);
+    m.update(3, media({ title: "Back" }));
+    timers.shift()!();
+    expect(disconnected).toBe(0);
+    expect(ports.length).toBe(1);
+  });
+});

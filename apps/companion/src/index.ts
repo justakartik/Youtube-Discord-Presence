@@ -90,8 +90,11 @@ function runHost() {
   } catch {
     /* ignore */
   }
+  let logWrites = 0;
   function dlog(line: string) {
     try {
+      // Cap the file during long sessions too, not just at startup.
+      if (++logWrites % 200 === 0 && fs.statSync(logFile).size > 100_000) fs.rmSync(logFile);
       fs.appendFileSync(logFile, `${new Date().toISOString()} ${line}\n`);
     } catch {
       /* ignore */

@@ -13,6 +13,8 @@ Layout: `packages/shared` (pure logic) · `apps/extension` (MV3; Vite builds pop
 
 Manual dev loop: `pnpm build`, load `apps/extension/dist` unpacked, run `install.ps1` from `release/` once (or point the host manifest at `node host.cjs` via a .bat wrapper), watch `chrome://extensions` → service worker console.
 
+Memory/leak check: `node scripts/stress.mjs` (optionally `SCALE=5`) drives the extension state manager, companion host, Discord IPC and content-script monitor through heavy churn and prints heap/handle deltas.
+
 ## Diagnostics
 The companion writes `host.log` (message types and Discord connection states, no titles), `startup.log` and `last-activity.json` (the exact payload sent to Discord plus Discord's reply) next to `jpresence-host.exe`, i.e. in `%LOCALAPPDATA%\Justakartik\Presence`. They are local only and size-capped.
 

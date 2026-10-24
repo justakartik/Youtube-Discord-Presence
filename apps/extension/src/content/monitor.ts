@@ -2,6 +2,10 @@ import type { MediaState } from "@jpresence/shared";
 import type { MediaProvider } from "../providers/types";
 
 export type MonitorDeps = {
+  /** Poll interval in ms (default 3000). */
+  pollMs?: number;
+  /** Skip polling while the tab is hidden (events still wake it). Used for plain websites. */
+  skipWhenHidden?: boolean;
   doc: Document;
   getUrl: () => URL;
   provider: MediaProvider;
@@ -40,7 +44,10 @@ export class MediaMonitor {
     const target = doc.querySelector("title") ?? doc.head;
     if (target) this.mo.observe(target, { childList: true, subtree: true, characterData: true });
     // Fallback polling (also drives heartbeat + seek detection); cheap, one read per tick.
-    this.poll = setInterval(this.schedule, 3000);
+    this.poll = setInterval(() => {
+      if (this.d.skipWhenHidden && doc.visibilityState !== "visible" && this.last === null) return;
+      this.schedule();
+    }, this.d.pollMs ?? 3000);
     this.schedule();
   }
 
